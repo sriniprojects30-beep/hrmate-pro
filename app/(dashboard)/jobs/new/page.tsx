@@ -1,16 +1,52 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronRight, Save, Send } from 'lucide-react';
+import { ChevronRight, Save, Send, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { createJob } from '@/app/actions/jobs';
 
 export default function NewJobPage() {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    department: '',
+    location: '',
+    employment_type: 'Full-time',
+    experience_required: '',
+    salary_range: '',
+    description: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    const formDataObj = new FormData();
+    formDataObj.append('title', formData.title);
+    formDataObj.append('department', formData.department);
+    formDataObj.append('location', formData.location);
+    formDataObj.append('employment_type', formData.employment_type);
+    formDataObj.append('experience_required', formData.experience_required);
+    formDataObj.append('salary_range', formData.salary_range);
+    formDataObj.append('description', formData.description);
+    
+    try {
+      await createJob(formDataObj);
+      router.push('/jobs');
+    } catch (err) {
+      console.error(err);
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center text-sm text-muted-foreground mb-2">
         <Link href="/jobs" className="hover:text-primary transition-colors">Jobs</Link>
         <ChevronRight className="w-4 h-4 mx-1" />
@@ -27,8 +63,8 @@ export default function NewJobPage() {
             <Save className="w-4 h-4 mr-2" />
             Save Draft
           </Button>
-          <Button>
-            <Send className="w-4 h-4 mr-2" />
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
             Publish
           </Button>
         </div>
@@ -42,24 +78,24 @@ export default function NewJobPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Job Title</label>
-                <Input placeholder="e.g. Senior Frontend Developer" />
+                <label className="text-sm font-medium">Job Title *</label>
+                <Input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="e.g. Senior Frontend Developer" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Department</label>
-                <Input placeholder="e.g. Engineering" />
+                <Input value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} placeholder="e.g. Engineering" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Location</label>
-                <Input placeholder="e.g. Remote, New York" />
+                <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="e.g. Remote, New York" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Employment Type</label>
-                <select className="flex h-10 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20">
-                  <option>Full-time</option>
-                  <option>Part-time</option>
-                  <option>Contract</option>
-                  <option>Internship</option>
+                <select value={formData.employment_type} onChange={e => setFormData({...formData, employment_type: e.target.value})} className="flex h-10 w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20">
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -112,30 +148,18 @@ export default function NewJobPage() {
             <CardTitle>Description & Requirements</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Job Description</label>
-              <textarea 
-                className="flex min-h-[120px] w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
-                placeholder="Describe the role and responsibilities..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Requirements</label>
-              <textarea 
-                className="flex min-h-[120px] w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
-                placeholder="List the required skills and qualifications..."
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Benefits</label>
-              <textarea 
-                className="flex min-h-[120px] w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
-                placeholder="What perks do you offer?"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
-  );
-}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Job Description</label>
+                <textarea 
+                  value={formData.description}
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                  className="flex min-h-[120px] w-full rounded-xl border border-input bg-surface px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
+                  placeholder="Describe the role and responsibilities..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </form>
+    );
+  }

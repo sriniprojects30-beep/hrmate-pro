@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronRight, UploadCloud, FileText } from 'lucide-react';
+import { ChevronRight, UploadCloud, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { createCandidate } from '@/app/actions/candidates';
 
 export default function NewCandidatePage() {
   const router = useRouter();
@@ -25,10 +26,29 @@ export default function NewCandidatePage() {
     notes: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate save
-    router.push('/candidates');
+    setIsSubmitting(true);
+    
+    const formDataObj = new FormData();
+    formDataObj.append('first_name', formData.firstName);
+    formDataObj.append('last_name', formData.lastName);
+    formDataObj.append('email', formData.email);
+    formDataObj.append('phone', formData.phone);
+    formDataObj.append('location', formData.location);
+    formDataObj.append('current_company', formData.currentCompany);
+    formDataObj.append('current_position', formData.currentPosition);
+    formDataObj.append('experience_years', formData.experience);
+    
+    try {
+      await createCandidate(formDataObj);
+      router.push('/candidates');
+    } catch (err) {
+      console.error(err);
+      setIsSubmitting(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -208,7 +228,8 @@ export default function NewCandidatePage() {
           <Button type="button" variant="outline" onClick={() => router.push('/candidates')}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Save Candidate
           </Button>
         </div>
