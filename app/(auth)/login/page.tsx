@@ -60,6 +60,23 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message || 'An error occurred with Google Sign In');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -170,9 +187,9 @@ export default function LoginPage() {
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
             className="w-full flex items-center justify-center px-4 py-2 border border-input rounded-md shadow-sm bg-background/50 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors group relative"
-            disabled
-            title="Coming soon"
           >
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
               <path

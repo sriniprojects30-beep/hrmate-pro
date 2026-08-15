@@ -87,12 +87,31 @@ export default function SignupPage() {
         },
       });
 
-      if (error) throw error;
-      
-      setIsSuccess(true);
+      if (error) {
+        throw error;
+      }
+
+      router.push('/verify');
     } catch (err: any) {
       setError(err.message || 'An error occurred during sign up');
     } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setError(err.message || 'An error occurred with Google Sign Up');
       setIsLoading(false);
     }
   };
@@ -284,9 +303,9 @@ export default function SignupPage() {
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
             className="w-full flex items-center justify-center px-4 py-2 border border-input rounded-md shadow-sm bg-background/50 text-sm font-medium text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors group relative"
-            disabled
-            title="Coming soon"
           >
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
               <path
