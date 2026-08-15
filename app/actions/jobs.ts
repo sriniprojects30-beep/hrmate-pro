@@ -10,18 +10,38 @@ async function getUserOrganization() {
   if (!user) throw new Error('Unauthorized');
 
   // Find user's organization
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (membership?.organization_id) {
     return membership.organization_id;
   }
 
-  // If no org exists, they shouldn't be creating jobs, but fallback just in case
-  throw new Error('No organization found');
+  // If no org exists (new signup), create a default one
+  const { data: org, error: orgError } = await supabase
+    .from('organizations')
+    .insert({
+      name: 'My Organization',
+      slug: `org-${user.id.substring(0, 8)}`,
+    })
+    .select('id')
+    .single();
+
+  if (orgError) throw orgError;
+
+  // Add user to the new org
+  await supabase
+    .from('organization_members')
+    .insert({
+      organization_id: org.id,
+      user_id: user.id,
+      status: 'active'
+    });
+
+  return org.id;
 }
 
 export async function getJobs() {

@@ -10,11 +10,11 @@ async function getUserOrganization() {
   if (!user) throw new Error('Unauthorized');
 
   // Find user's organization
-  const { data: membership } = await supabase
+  const { data: membership, error: membershipError } = await supabase
     .from('organization_members')
     .select('organization_id')
     .eq('user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (membership?.organization_id) {
     return membership.organization_id;
