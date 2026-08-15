@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSidebar } from '@/components/layout/sidebar';
 import { ThemeSelector } from '@/components/layout/theme-selector';
 import { cn } from '@/lib/utils/cn';
 import { 
@@ -16,12 +17,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { setMobileOpen } = useSidebar();
 
   return (
     <header className="sticky top-0 z-50 flex h-[var(--header-height)] w-full items-center justify-between px-4 glass-panel border-b border-border">
       <div className="flex items-center gap-4">
         {/* Mobile menu button */}
-        <button className="md:hidden p-2 rounded-md hover:bg-muted/80 text-foreground transition-colors">
+        <button 
+          onClick={() => setMobileOpen(true)}
+          className="md:hidden p-2 rounded-md hover:bg-muted/80 text-foreground transition-colors"
+        >
           <Menu className="h-5 w-5" />
         </button>
 
